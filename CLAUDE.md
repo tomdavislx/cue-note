@@ -29,7 +29,9 @@ Three Electron layers, connected by a hand-maintained IPC surface:
 
 Adding a console feature means touching all three: handler in `index.ts`, method in `ContextBridgeApi` plus its `exposedApi` implementation in `preload.ts`, then a call from the renderer. IPC channel names and payload shapes aren't type-checked across the boundary, so keep the strings and the argument/destructuring shapes in sync by hand. Some events send wrapped payloads (e.g. `console:active-cue` sends `{ cue }`, `console:show-name` sends `{ showName }`) and the preload unwraps them.
 
-Console discovery uses `EtcDiscovery` from `eos-console` (main process, `discovery:start`/`discovery:stop`/`discovery:devices-changed`); `ConsoleDiscovery` starts it on mount and stops it on unmount, with a toggle to `ManualConnectionForm`. Connection errors are not sent as events: `console:connect` rethrows, and `ConsoleConnectionCard` catches the rejected `connectConsole()` promise and shows a `react-hot-toast` toast.
+Console discovery is `EtcDeviceDiscovery` in `src/discovery.ts` (main process, `discovery:start`/`discovery:stop`/`discovery:devices-changed`). It replaces `eos-console`'s `EtcDiscovery`, which only sends to each interface's directed broadcast address and so misses consoles with a different subnet mask; ours also sends to `255.255.255.255` from a socket bound to each interface.
+
+The `ConsoleDiscovery` component starts it on mount and stops it on unmount, with a toggle to `ManualConnectionForm`. Connection errors are not sent as events: `console:connect` rethrows, and `ConsoleConnectionCard` catches the rejected `connectConsole()` promise and shows a `react-hot-toast` toast.
 
 Flow on connect: `console:connect` → main emits `console:connection-state` → `App` calls `getCues()` (progress reported via `console:get-cues-progress`) → live updates arrive as `console:cue-change`, after which `App` refetches each changed cue with `getCue` and inserts, replaces or deletes it in state.
 

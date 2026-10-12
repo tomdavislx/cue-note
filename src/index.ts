@@ -2,11 +2,11 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import {
     EosConsole,
     EosCueIdentifier,
-    EtcDiscovery,
     RecordTargetType,
     TargetNumber,
 } from 'eos-console';
 import * as colors from 'tailwindcss/colors';
+import { EtcDeviceDiscovery } from './discovery';
 
 let mainWindow: BrowserWindow | null;
 let eos: EosConsole | null;
@@ -24,18 +24,14 @@ if (require('electron-squirrel-startup')) {
     app.quit();
 }
 
-const etcDiscovery = new EtcDiscovery();
+const discovery = new EtcDeviceDiscovery();
 
-const onDiscoveryDevicesChanged = () => {
+discovery.on('changed', () => {
     mainWindow?.webContents.send(
         'discovery:devices-changed',
-        etcDiscovery.getDevices(),
+        discovery.getDevices(),
     );
-};
-
-etcDiscovery
-    .on('found', onDiscoveryDevicesChanged)
-    .on('lost', onDiscoveryDevicesChanged);
+});
 
 const createWindow = (): void => {
     mainWindow = new BrowserWindow({
@@ -219,10 +215,10 @@ ipcMain.on(
 
 ipcMain.on('discovery:start', () => {
     console.log('starting discovery');
-    etcDiscovery.start();
+    discovery.start();
 });
 
 ipcMain.on('discovery:stop', () => {
     console.log('stopping discovery');
-    etcDiscovery.stop();
+    discovery.stop();
 });
