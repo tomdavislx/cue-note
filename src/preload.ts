@@ -50,10 +50,6 @@ export type ContextBridgeApi = {
         callback: (state: EosConnectionState) => void,
     ) => RemoveEventListenerFunc;
 
-    onConnectError: (
-        callback: (reason: string) => void,
-    ) => RemoveEventListenerFunc;
-
     onShowName: (callback: (name: string) => void) => RemoveEventListenerFunc;
 
     onCueChange: (
@@ -133,19 +129,6 @@ const exposedApi: ContextBridgeApi = {
 
         return () => {
             ipcRenderer.off('console:connection-state', subscription);
-        };
-    },
-
-    onConnectError: (callback) => {
-        const subscription = (
-            _event: IpcRendererEvent,
-            ...[reason]: [string]
-        ) => callback(reason);
-
-        ipcRenderer.on('console:connect-error', subscription);
-
-        return () => {
-            ipcRenderer.off('console:connect-error', subscription);
         };
     },
 

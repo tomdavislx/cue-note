@@ -35,7 +35,7 @@ const ConsoleConnectionCard = (props: ConsoleConnectionCardProps) => {
                     message = 'Connection refused';
                 } else if (err.message.includes('ENOTFOUND')) {
                     message = 'Address not found';
-                } else if (err.message === 'timed out') {
+                } else if (err.message.includes('timed out')) {
                     message = 'Connection timed out';
                 }
 

@@ -154,10 +154,10 @@ ipcMain.handle('console:connect', async (_event, ...[address]) => {
     try {
         await eos.connect();
     } catch (err) {
-        mainWindow?.webContents.send(
-            'console:connect-error',
-            (err instanceof Error) ? err.message : 'Unknown error');
         mainWindow?.webContents.send('console:connection-state', 'disconnected');
+
+        // Rejects the renderer's connectConsole() promise so it can show the error
+        throw err;
     }
 });
 
