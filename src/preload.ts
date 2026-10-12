@@ -1,5 +1,11 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { Cue, EosConnectionState, EosCueIdentifier, TargetNumber } from 'eos-console';
+import {
+    Cue,
+    EosConnectionState,
+    EosCueIdentifier,
+    EtcDiscoveredDevice,
+    TargetNumber,
+} from 'eos-console';
 
 export type RemoveEventListenerFunc = () => void;
 
@@ -21,6 +27,10 @@ export type ContextBridgeApi = {
     getPendingCue: () => Promise<EosCueIdentifier | undefined>;
 
     goToCue: (cueNumber: string) => void;
+
+    startDiscovery: () => void;
+
+    stopDiscovery: () => void;
 
     updateCueNotes: (
         cueList: TargetNumber,
@@ -53,6 +63,10 @@ export type ContextBridgeApi = {
     onGetCuesProgress: (
         callback: (progress: number) => void,
     ) => RemoveEventListenerFunc;
+
+    onDiscoveredDevicesChanged: (
+        callback: (devices: EtcDiscoveredDevice[]) => void,
+    ) => RemoveEventListenerFunc;
 };
 
 const exposedApi: ContextBridgeApi = {
@@ -75,6 +89,10 @@ const exposedApi: ContextBridgeApi = {
     getPendingCue: async () => ipcRenderer.invoke('console:get-pending-cue'),
 
     goToCue: (cueNumber) => ipcRenderer.send('console:go-to-cue', cueNumber),
+
+    startDiscovery: () => ipcRenderer.send('discovery:start'),
+
+    stopDiscovery: () => ipcRenderer.send('discovery:stop'),
 
     updateCueNotes: (cueList, cueNumber, notes) =>
         ipcRenderer.send('console:update-cue-notes', cueList, cueNumber, notes),
@@ -167,6 +185,19 @@ const exposedApi: ContextBridgeApi = {
 
         return () => {
             ipcRenderer.off('console:get-cues-progress', subscription);
+        };
+    },
+
+    onDiscoveredDevicesChanged: (callback) => {
+        const subscription = (
+            _event: IpcRendererEvent,
+            ...[devices]: [EtcDiscoveredDevice[]]
+        ) => callback(devices);
+
+        ipcRenderer.on('discovery:devices-changed', subscription);
+
+        return () => {
+            ipcRenderer.off('discovery:devices-changed', subscription);
         };
     },
 };
