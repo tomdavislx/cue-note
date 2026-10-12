@@ -52,6 +52,12 @@ const createWindow = (): void => {
         width: 1024,
     });
 
+    // On macOS the app outlives its window, and console events keep arriving.
+    // Drop the reference so the `mainWindow?.` calls skip a destroyed window.
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
+
     mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
     mainWindow.webContents.openDevTools();
